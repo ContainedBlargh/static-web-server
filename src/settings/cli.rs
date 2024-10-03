@@ -525,6 +525,16 @@ pub struct General {
     /// Tell the web server to run in a Windows Service context. Note that the `install` subcommand will enable this option automatically.
     pub windows_service: bool,
 
+    #[arg(
+        long,
+        default_value = "",
+        value_parser = value_parser_pathbuf,
+        env = "SERVER_MODS_DIR"
+    )]
+
+    /// Root directory path of static files.
+    pub mods_dir: PathBuf,
+
     // Subcommands
     #[command(subcommand)]
     /// Subcommands for additional maintenance tasks, like installing and uninstalling the SWS Windows Service and generation of completions and man pages

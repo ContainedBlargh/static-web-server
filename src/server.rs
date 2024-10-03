@@ -47,9 +47,7 @@ use crate::basic_auth;
 #[cfg(feature = "experimental")]
 use crate::mem_cache;
 
-use crate::{
-    control_headers, cors, health, helpers, log_addr, maintenance_mode, security_headers, Settings,
-};
+use crate::{control_headers, cors, health, helpers, log_addr, maintenance_mode, modules, security_headers, Settings};
 use crate::{service::RouterService, Context, Result};
 
 /// Define a multi-threaded HTTP or HTTP/2 web server.
@@ -255,6 +253,8 @@ impl Server {
         }
         server_info!("index files: {}", general.index_files);
 
+        let mods_dir = general.mods_dir.clone();
+
         // Request handler options, some settings will be filled in by modules
         let mut handler_opts = RequestHandlerOpts {
             root_dir,
@@ -284,6 +284,9 @@ impl Server {
 
         // Health endpoint option
         health::init(general.health, &mut handler_opts);
+
+        // Load mods
+        modules::init(mods_dir.clone(), &mut handler_opts);
 
         // Log remote address option
         log_addr::init(general.log_remote_address, &mut handler_opts);

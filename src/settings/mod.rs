@@ -206,6 +206,8 @@ impl Settings {
         #[cfg(all(unix, feature = "experimental"))]
         let mut experimental_metrics = opts.experimental_metrics;
 
+        let mut mods_dir = opts.mods_dir;
+
         let mut maintenance_mode = opts.maintenance_mode;
         let mut maintenance_mode_status = opts.maintenance_mode_status;
         let mut maintenance_mode_file = opts.maintenance_mode_file;
@@ -392,7 +394,9 @@ impl Settings {
                 if let Some(v) = general.maintenance_mode_file {
                     maintenance_mode_file = v
                 }
-
+                if let Some(v) = general.mods_dir {
+                    mods_dir = v
+                }
                 // Windows-only options
                 #[cfg(windows)]
                 if let Some(v) = general.windows_service {
@@ -661,7 +665,7 @@ impl Settings {
                 maintenance_mode,
                 maintenance_mode_status,
                 maintenance_mode_file,
-
+                mods_dir,
                 // Windows-only options and commands
                 #[cfg(windows)]
                 windows_service,

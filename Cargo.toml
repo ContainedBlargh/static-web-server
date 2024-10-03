@@ -96,6 +96,10 @@ tokio-util = { version = "0.7", default-features = false, features = ["io"] }
 toml = "0.8"
 tracing = { version = "0.1", default-features = false, features = ["std"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["smallvec", "registry", "parking_lot", "fmt", "ansi", "tracing-log"] }
+dlopen = "0.1.8"
+dlopen_derive = "0.1.4"
+sws-mod-api = {path = "../sws-mod-api"}
+glob = "0.3.1"
 
 [target.'cfg(all(target_env = "musl", target_pointer_width = "64"))'.dependencies.tikv-jemallocator]
 version = "0.6"

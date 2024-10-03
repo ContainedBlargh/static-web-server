@@ -30,17 +30,11 @@ use crate::metrics;
 #[cfg(feature = "experimental")]
 use crate::mem_cache::cache::MemCacheOpts;
 
-use crate::{
-    control_headers, cors, custom_headers, error_page, health,
-    http_ext::MethodExt,
-    log_addr, maintenance_mode, redirects, rewrites, security_headers,
-    settings::Advanced,
-    static_files::{self, HandleOpts},
-    virtual_hosts, Error, Result,
-};
+use crate::{control_headers, cors, custom_headers, error_page, health, http_ext::MethodExt, log_addr, maintenance_mode, redirects, rewrites, security_headers, settings::Advanced, static_files::{self, HandleOpts}, virtual_hosts, Error, Result, modules};
 
 #[cfg(feature = "directory-listing")]
 use crate::directory_listing::DirListFmt;
+use crate::modules::LoadedMod;
 
 /// It defines options for a request handler.
 pub struct RequestHandlerOpts {
@@ -115,6 +109,9 @@ pub struct RequestHandlerOpts {
     /// Custom maintenance mode HTML file.
     pub maintenance_mode_file: PathBuf,
 
+    /// Modules directory, if any.
+    pub mods: Vec<LoadedMod>,
+
     /// Advanced options from the config file.
     pub advanced_opts: Option<Advanced>,
 }
@@ -161,6 +158,7 @@ impl Default for RequestHandlerOpts {
             maintenance_mode: false,
             maintenance_mode_status: StatusCode::SERVICE_UNAVAILABLE,
             maintenance_mode_file: PathBuf::new(),
+            mods: vec![],
             advanced_opts: None,
         }
     }
@@ -210,6 +208,10 @@ impl RequestHandler {
 
             // Health endpoint check
             if let Some(result) = health::pre_process(&self.opts, req) {
+                return result;
+            }
+
+            if let Some(result) = modules::pre_process(&self.opts, req) {
                 return result;
             }
 

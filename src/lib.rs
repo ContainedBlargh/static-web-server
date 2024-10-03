@@ -95,7 +95,7 @@
 //!
 
 #![deny(missing_docs)]
-#![forbid(unsafe_code)]
+// #![forbid(unsafe_code)]
 #![deny(warnings)]
 #![deny(rust_2018_idioms)]
 #![deny(dead_code)]
@@ -201,6 +201,7 @@ pub mod error;
 mod helpers;
 #[doc(hidden)]
 pub mod testing;
+mod modules;
 
 // Re-exports
 pub use error::*;
