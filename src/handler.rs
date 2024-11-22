@@ -7,7 +7,12 @@
 //!
 
 use hyper::{Body, Request, Response, StatusCode};
-use std::{future::Future, net::SocketAddr, path::PathBuf, sync::Arc};
+use std::{
+    future::Future,
+    net::{IpAddr, SocketAddr},
+    path::PathBuf,
+    sync::Arc,
+};
 
 #[cfg(any(
     feature = "compression",
@@ -91,6 +96,10 @@ pub struct RequestHandlerOpts {
     pub index_files: Vec<String>,
     /// Log remote address feature.
     pub log_remote_address: bool,
+    /// Log the X-Forwarded-For header.
+    pub log_forwarded_for: bool,
+    /// Trusted IPs for remote addresses.
+    pub trusted_proxies: Vec<IpAddr>,
     /// Redirect trailing slash feature.
     pub redirect_trailing_slash: bool,
     /// Ignore hidden files feature.
@@ -149,6 +158,8 @@ impl Default for RequestHandlerOpts {
             basic_auth: String::new(),
             index_files: vec!["index.html".into()],
             log_remote_address: false,
+            log_forwarded_for: false,
+            trusted_proxies: Vec::new(),
             redirect_trailing_slash: true,
             ignore_hidden_files: false,
             disable_symlinks: false,
@@ -332,60 +343,6 @@ impl RequestHandler {
             let resp = custom_headers::post_process(&self.opts, req, resp, file_path.as_ref())?;
 
             Ok(resp)
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use headers::HeaderValue;
-    use hyper::{Method, Request};
-    use std::net::SocketAddr;
-
-    use crate::http_ext::MethodExt;
-    use crate::testing::fixtures::{fixture_req_handler, fixture_settings, REMOTE_ADDR};
-
-    #[tokio::test]
-    async fn check_allowed_methods() {
-        let settings = fixture_settings("toml/handler.toml");
-        let req_handler = fixture_req_handler(settings.general, settings.advanced);
-        let remote_addr = Some(REMOTE_ADDR.parse::<SocketAddr>().unwrap());
-
-        let methods = [
-            Method::CONNECT,
-            Method::DELETE,
-            Method::GET,
-            Method::HEAD,
-            Method::PATCH,
-            Method::POST,
-            Method::PUT,
-            Method::TRACE,
-        ];
-        for method in methods {
-            let mut req = Request::default();
-            *req.method_mut() = method.clone();
-            *req.uri_mut() = "http://localhost/assets/index.html".parse().unwrap();
-
-            match req_handler.handle(&mut req, remote_addr).await {
-                Ok(resp) => {
-                    if method.is_allowed() {
-                        assert_eq!(resp.status(), 200);
-                        assert_eq!(
-                            resp.headers().get("content-type"),
-                            Some(&HeaderValue::from_static("text/html"))
-                        );
-                        assert_eq!(
-                            resp.headers().get("server"),
-                            Some(&HeaderValue::from_static("Static Web Server"))
-                        );
-                    } else {
-                        assert_eq!(resp.status(), 405);
-                    }
-                }
-                Err(err) => {
-                    panic!("unexpected error: {err}")
-                }
-            };
         }
     }
 }
